@@ -1,0 +1,5 @@
+{
+  "name": "Parent Copilot",
+  "description": "An application to help parents understand their children’s development through a proactive AI chat and auto-generated insights. The app guides parents via short, empathetic AI questions to capture signals about their child; converting answers into structured “Insights” that compare against age-expected milestones and offer practical Montessori-aligned suggestions.",
+  "requestFramePermissions": []
+}
