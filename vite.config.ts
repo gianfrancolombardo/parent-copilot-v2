@@ -3,7 +3,23 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
+    // Load environment variables from both .env files and system env vars
     const env = loadEnv(mode, '.', '');
+    
+    // For production builds, also check system environment variables
+    const systemEnv = {
+        ...env,
+        // Override with system env vars if they exist (for Netlify)
+        REACT_APP_FIREBASE_API_KEY: process.env.REACT_APP_FIREBASE_API_KEY || env.REACT_APP_FIREBASE_API_KEY,
+        REACT_APP_FIREBASE_AUTH_DOMAIN: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+        REACT_APP_FIREBASE_PROJECT_ID: process.env.REACT_APP_FIREBASE_PROJECT_ID || env.REACT_APP_FIREBASE_PROJECT_ID,
+        REACT_APP_FIREBASE_STORAGE_BUCKET: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+        REACT_APP_FIREBASE_MESSAGING_SENDER_ID: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+        REACT_APP_FIREBASE_APP_ID: process.env.REACT_APP_FIREBASE_APP_ID || env.REACT_APP_FIREBASE_APP_ID,
+        REACT_APP_OPENAI_API_KEY: process.env.REACT_APP_OPENAI_API_KEY || env.REACT_APP_OPENAI_API_KEY,
+        API_KEY: process.env.API_KEY || env.API_KEY,
+        GEMINI_API_KEY: process.env.GEMINI_API_KEY || env.GEMINI_API_KEY,
+    };
     return {
       server: {
         port: 3000,
@@ -29,18 +45,18 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        // AI Provider variables
-        'process.env.API_KEY': JSON.stringify(env.API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.REACT_APP_OPENAI_API_KEY': JSON.stringify(env.REACT_APP_OPENAI_API_KEY),
+        // AI Provider variables (using systemEnv for production builds)
+        'process.env.API_KEY': JSON.stringify(systemEnv.API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(systemEnv.GEMINI_API_KEY),
+        'process.env.REACT_APP_OPENAI_API_KEY': JSON.stringify(systemEnv.REACT_APP_OPENAI_API_KEY),
         
-        // Firebase variables
-        'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(env.REACT_APP_FIREBASE_API_KEY),
-        'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(env.REACT_APP_FIREBASE_AUTH_DOMAIN),
-        'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(env.REACT_APP_FIREBASE_PROJECT_ID),
-        'process.env.REACT_APP_FIREBASE_STORAGE_BUCKET': JSON.stringify(env.REACT_APP_FIREBASE_STORAGE_BUCKET),
-        'process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID),
-        'process.env.REACT_APP_FIREBASE_APP_ID': JSON.stringify(env.REACT_APP_FIREBASE_APP_ID)
+        // Firebase variables (using systemEnv for production builds)
+        'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(systemEnv.REACT_APP_FIREBASE_API_KEY),
+        'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(systemEnv.REACT_APP_FIREBASE_AUTH_DOMAIN),
+        'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_PROJECT_ID),
+        'process.env.REACT_APP_FIREBASE_STORAGE_BUCKET': JSON.stringify(systemEnv.REACT_APP_FIREBASE_STORAGE_BUCKET),
+        'process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_MESSAGING_SENDER_ID),
+        'process.env.REACT_APP_FIREBASE_APP_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_APP_ID)
       },
       resolve: {
         alias: {
