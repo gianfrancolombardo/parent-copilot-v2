@@ -6,10 +6,9 @@ export default defineConfig(({ mode }) => {
     // Load environment variables from both .env files and system env vars
     const env = loadEnv(mode, '.', '');
     
-    // For production builds, also check system environment variables
+    // For production builds, prioritize system env vars (Netlify) over .env file
     const systemEnv = {
-        ...env,
-        // Override with system env vars if they exist (for Netlify)
+        // Use system env vars first (for Netlify), then fall back to .env file
         REACT_APP_FIREBASE_API_KEY: process.env.REACT_APP_FIREBASE_API_KEY || env.REACT_APP_FIREBASE_API_KEY,
         REACT_APP_FIREBASE_AUTH_DOMAIN: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || env.REACT_APP_FIREBASE_AUTH_DOMAIN,
         REACT_APP_FIREBASE_PROJECT_ID: process.env.REACT_APP_FIREBASE_PROJECT_ID || env.REACT_APP_FIREBASE_PROJECT_ID,
@@ -45,12 +44,21 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        // AI Provider variables (using systemEnv for production builds)
+        // Use import.meta.env for Vite (more reliable than process.env)
+        'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(systemEnv.REACT_APP_FIREBASE_API_KEY),
+        'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(systemEnv.REACT_APP_FIREBASE_AUTH_DOMAIN),
+        'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_PROJECT_ID),
+        'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(systemEnv.REACT_APP_FIREBASE_STORAGE_BUCKET),
+        'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_MESSAGING_SENDER_ID),
+        'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_APP_ID),
+        'import.meta.env.VITE_OPENAI_API_KEY': JSON.stringify(systemEnv.REACT_APP_OPENAI_API_KEY),
+        'import.meta.env.VITE_API_KEY': JSON.stringify(systemEnv.API_KEY),
+        'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(systemEnv.GEMINI_API_KEY),
+        
+        // Keep process.env for backward compatibility
         'process.env.API_KEY': JSON.stringify(systemEnv.API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(systemEnv.GEMINI_API_KEY),
         'process.env.REACT_APP_OPENAI_API_KEY': JSON.stringify(systemEnv.REACT_APP_OPENAI_API_KEY),
-        
-        // Firebase variables (using systemEnv for production builds)
         'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(systemEnv.REACT_APP_FIREBASE_API_KEY),
         'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(systemEnv.REACT_APP_FIREBASE_AUTH_DOMAIN),
         'process.env.REACT_APP_FIREBASE_PROJECT_ID': JSON.stringify(systemEnv.REACT_APP_FIREBASE_PROJECT_ID),
