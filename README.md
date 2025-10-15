@@ -18,30 +18,35 @@ This document explains how to set up Firebase for the Parent Copilot application
     *   Start in **test mode** for initial development. This allows open read/write access. **For production, you must configure security rules.**
     *   Choose a location for your database.
 
-## 2. Environment Variables
+## 2. Environment Variables Setup
 
-The application is configured to use environment variables for Firebase configuration and the AI provider API key. The code expects these to be available on `process.env`. To be exposed to the client-side application, all variables **must** be prefixed with `REACT_APP_`.
+### Step 1: Create .env file
+Copy the example environment file and configure it with your actual values:
+```bash
+cp .env.example .env
+```
 
-The application supports both Google Gemini and OpenAI as AI providers.
+### Step 2: Configure Firebase Variables
+Edit your `.env` file and replace the placeholder values with your actual Firebase configuration:
 
--   **To use OpenAI (Recommended):** Set the `REACT_APP_OPENAI_API_KEY`. The app will use `gpt-5-mini`. This provider is prioritized if both keys are present.
+```env
+# Firebase Configuration
+REACT_APP_FIREBASE_API_KEY=your_firebase_api_key_here
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id
+```
+
+### Step 3: Configure AI Provider
+The application supports both Google Gemini and OpenAI as AI providers:
+
+-   **To use OpenAI (Recommended):** Set the `REACT_APP_OPENAI_API_KEY`. The app will use `gpt-4o-mini`. This provider is prioritized if both keys are present.
 -   **To use Gemini:** Set the `REACT_APP_API_KEY`. This will be used as a fallback if `REACT_APP_OPENAI_API_KEY` is not set.
 -   If neither key is provided, the AI features will be disabled and will show an error message in the chat.
 
-**Required Variables:**
-
-```
-REACT_APP_FIREBASE_API_KEY="AIzaSyDwV7pnHfvIJPKfANnB5N2io9UqdOvWvvU"
-REACT_APP_FIREBASE_AUTH_DOMAIN="parents-copilot.firebaseapp.com"
-REACT_APP_FIREBASE_PROJECT_ID="parents-copilot"
-REACT_APP_FIREBASE_STORAGE_BUCKET="parents-copilot.appspot.com"
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID="86922263005"
-REACT_APP_FIREBASE_APP_ID="1:86922263005:web:a76064cb815e9993435e34"
-
-# Choose your AI provider(s)
-REACT_APP_API_KEY="YOUR_GEMINI_API_KEY"
-REACT_APP_OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-```
+**Important:** All variables **must** be prefixed with `REACT_APP_` to be exposed to the client-side application.
 
 ## 3. Firestore Data Structure
 
