@@ -49,6 +49,16 @@ export class ContextManager {
     const conversationTone = this.determineConversationTone(context);
     const contextualInsights = this.extractContextualInsights(context);
 
+    // DEBUG: Log context analysis
+    console.log('🔍 CONTEXT DEBUG - Analysis Results:', {
+      shouldAvoidRepetition,
+      suggestedTopics,
+      conversationTone,
+      contextualInsights,
+      coveredTopics: context.coveredTopics,
+      recentMessagesCount: context.recentMessages.length
+    });
+
     return {
       shouldAvoidRepetition,
       suggestedTopics,
@@ -143,7 +153,9 @@ export class ContextManager {
     const now = new Date();
     const hoursDiff = (now.getTime() - lastQuestionTime.getTime()) / (1000 * 60 * 60);
     
-    return hoursDiff < this.REPETITION_THRESHOLD_HOURS;
+    // Be less restrictive - only avoid repetition if the same topic was covered very recently (30 minutes instead of 2 hours)
+    const restrictiveThreshold = 0.5; // 30 minutes
+    return hoursDiff < restrictiveThreshold;
   }
 
   private static suggestNextTopics(context: ConversationContext): InsightCategory[] {
@@ -199,10 +211,11 @@ export class ContextManager {
     return `
 - Resumen: ${context.conversationSummary}
 - Temas cubiertos: ${context.coveredTopics.length > 0 ? context.coveredTopics.join(', ') : 'Ninguno aún'}
-- Evitar repetición: ${analysis.shouldAvoidRepetition ? 'Sí' : 'No'}
+- Evitar repetición: ${analysis.shouldAvoidRepetition ? 'Sí (solo si es muy reciente)' : 'No'}
 - Tono sugerido: ${analysis.conversationTone}
 - Temas sugeridos: ${analysis.suggestedTopics.join(', ')}
 - Insights contextuales: ${analysis.contextualInsights.join('; ')}
+- **RECORDATORIO**: Siempre crea insights cuando el usuario proporcione información nueva sobre desarrollo, incluso si el tema ya fue cubierto
 `;
   }
 

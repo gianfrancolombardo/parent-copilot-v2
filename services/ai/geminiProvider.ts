@@ -58,6 +58,16 @@ export class GeminiProvider implements AIProvider {
         const context = ContextManager.buildContext(chatHistory);
         const analysis = ContextManager.analyzeContext(context);
         
+        // DEBUG: Log context information
+        console.log('🔍 INSIGHT DEBUG (Gemini) - Context Analysis:', {
+          coveredTopics: context.coveredTopics,
+          shouldAvoidRepetition: analysis.shouldAvoidRepetition,
+          conversationTone: analysis.conversationTone,
+          suggestedTopics: analysis.suggestedTopics,
+          contextualInsights: analysis.contextualInsights,
+          userMessage: userMessage.substring(0, 100) + '...'
+        });
+        
         // Create contextual prompt with memory
         const contextualPrompt = ContextManager.createContextualPrompt(
           child.name,
@@ -76,6 +86,10 @@ export class GeminiProvider implements AIProvider {
             let newInsight: Omit<Insight, 'id' | 'childId'> | null = null;
             let reply = '';
             const insightMarker = 'CREAR_INSIGHT:';
+            
+            console.log('🔍 INSIGHT DEBUG (Gemini) - Raw AI Response:', rawText.substring(0, 200) + '...');
+            console.log('🔍 INSIGHT DEBUG (Gemini) - Contains insight marker:', rawText.includes(insightMarker));
+            
             if (rawText.includes(insightMarker)) {
                 const parts = rawText.split(insightMarker);
                 const insightJsonString = parts[1].trim().split('\n')[0];
@@ -84,16 +98,22 @@ export class GeminiProvider implements AIProvider {
                     const parsedInsight = JSON.parse(insightJsonString);
                     if (parsedInsight.observation && parsedInsight.recommendation) {
                         newInsight = { ...parsedInsight, createdAt: new Date().toISOString(), type: 'observation' };
+                        console.log('✅ INSIGHT DEBUG (Gemini) - Insight created successfully:', {
+                          category: parsedInsight.category,
+                          title: parsedInsight.title,
+                          status: parsedInsight.status
+                        });
                     } else {
-                        console.error("Parsed insight is missing 'observation' or 'recommendation' field.");
+                        console.error("❌ INSIGHT DEBUG (Gemini) - Parsed insight is missing 'observation' or 'recommendation' field:", parsedInsight);
                         reply = rawText;
                     }
                 } catch (e) {
-                    console.error("Failed to parse insight JSON:", e);
+                    console.error("❌ INSIGHT DEBUG (Gemini) - Failed to parse insight JSON:", e, "JSON String:", insightJsonString);
                     reply = rawText;
                 }
             } else {
                 reply = rawText;
+                console.log('❌ INSIGHT DEBUG (Gemini) - No insight marker found in response');
             }
             if (!reply) {
                 reply = "Entendido. ¿Hay algo más que te gustaría compartir sobre eso?";
