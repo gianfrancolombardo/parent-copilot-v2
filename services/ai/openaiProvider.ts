@@ -6,7 +6,13 @@ import type { AIProvider } from './baseProvider';
 import { ContextManager } from '../contextManager';
 
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
-const API_URL = '/api/openai/v1/chat/completions';
+
+// Use different API URLs for development vs production
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_URL = isDevelopment 
+    ? '/api/openai/v1/chat/completions'  // Development: Use Vite proxy
+    : 'https://api.openai.com/v1/chat/completions';  // Production: Direct OpenAI API
+
 const MODEL = 'gpt-4o-mini';
 
 export class OpenAIProvider implements AIProvider {
