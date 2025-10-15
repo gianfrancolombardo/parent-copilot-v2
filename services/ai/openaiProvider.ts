@@ -3,10 +3,11 @@ import { getAgeInMonths } from "../../utils/age";
 import { SYSTEM_PROMPT, GET_INITIAL_QUESTION_PROMPT, GET_STIMULATION_SUGGESTION_PROMPT } from "../../prompts";
 import { InsightCategory as IC } from '../../types';
 import type { AIProvider } from './baseProvider';
+import { ContextManager } from '../contextManager';
 
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
-const API_URL = 'https://api.openai.com/v1/chat/completions';
-const MODEL = 'gpt-5-mini';
+const API_URL = '/api/openai/v1/chat/completions';
+const MODEL = 'gpt-4o-mini';
 
 export class OpenAIProvider implements AIProvider {
 
@@ -64,14 +65,23 @@ export class OpenAIProvider implements AIProvider {
       userMessage: string
     ): Promise<{ reply: string; newInsight: Omit<Insight, 'id' | 'childId'> | null }> => {
         const ageInMonths = getAgeInMonths(new Date(child.birthDate));
-        const recentCategories = chatHistory.filter(msg => msg.role === 'assistant' && msg.questionCategory).slice(-3).map(msg => msg.questionCategory).join(', ');
+        
+        // Build intelligent context from conversation history
+        const context = ContextManager.buildContext(chatHistory);
+        const analysis = ContextManager.analyzeContext(context);
+        
+        // Create contextual prompt with memory
+        const contextualPrompt = ContextManager.createContextualPrompt(
+          child.name,
+          ageInMonths,
+          context,
+          analysis,
+          userMessage
+        );
 
         const messages: {role: 'system' | 'user' | 'assistant', content: string}[] = [
-            { role: 'system', content: `${SYSTEM_PROMPT}\n\nContext:\n- Child's Name: ${child.name}\n- Child's Age: ${ageInMonths} months old\n- Recent Question Categories: ${recentCategories || 'None'}` }
+            { role: 'system', content: `${SYSTEM_PROMPT}\n\n${contextualPrompt}` }
         ];
-
-        chatHistory.forEach(msg => messages.push({ role: msg.role, content: msg.content }));
-        messages.push({ role: 'user', content: userMessage });
         
         try {
             const data = await this.makeRequest({ messages });

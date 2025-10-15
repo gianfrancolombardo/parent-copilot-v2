@@ -4,6 +4,7 @@ import { getAgeInMonths } from "../../utils/age";
 import { SYSTEM_PROMPT, GET_INITIAL_QUESTION_PROMPT, GET_STIMULATION_SUGGESTION_PROMPT } from "../../prompts";
 import { InsightCategory as IC } from '../../types';
 import type { AIProvider } from './baseProvider';
+import { ContextManager } from '../contextManager';
 
 const API_KEY = process.env.REACT_APP_API_KEY;
 
@@ -52,23 +53,23 @@ export class GeminiProvider implements AIProvider {
       userMessage: string
     ): Promise<{ reply: string; newInsight: Omit<Insight, 'id' | 'childId'> | null }> => {
         const ageInMonths = getAgeInMonths(new Date(child.birthDate));
-        const historyForPrompt = chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n');
-        const recentCategories = chatHistory.filter(msg => msg.role === 'assistant' && msg.questionCategory).slice(-3).map(msg => msg.questionCategory).join(', ');
-        const fullPrompt = `
-Context:
-- Child's Name: ${child.name}
-- Child's Age: ${ageInMonths} months old
-- Recent Question Categories: ${recentCategories || 'None'}
-
-Conversation History:
-${historyForPrompt}
-user: ${userMessage}
-assistant:
-`;
+        
+        // Build intelligent context from conversation history
+        const context = ContextManager.buildContext(chatHistory);
+        const analysis = ContextManager.analyzeContext(context);
+        
+        // Create contextual prompt with memory
+        const contextualPrompt = ContextManager.createContextualPrompt(
+          child.name,
+          ageInMonths,
+          context,
+          analysis,
+          userMessage
+        );
         try {
             const response = await this.ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: fullPrompt,
+                contents: contextualPrompt,
                 config: { systemInstruction: SYSTEM_PROMPT },
             });
             let rawText = response.text;

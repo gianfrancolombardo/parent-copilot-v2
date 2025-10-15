@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+docs/SYSTEM_VALUE_FLOW.md
+.env
+pnpm-lock.yaml

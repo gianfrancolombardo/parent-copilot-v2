@@ -74,3 +74,33 @@ You are a creative and experienced Montessori guide. Your task is to generate ON
   "recommendation": "Llena una cesta con 3-4 objetos familiares (cuchara, peine, llave) y nómbralos claramente uno por uno mientras se los muestras. Esto conecta palabras con objetos reales."
 }
 `;
+
+/**
+ * Contextual prompt template for conversation memory system
+ * This prompt is used to enhance AI responses with conversation history and context
+ */
+export const CONTEXTUAL_CONVERSATION_PROMPT = (
+  contextInfo: string,
+  recentMessages: string,
+  userMessage: string,
+  coveredTopics: string,
+  conversationTone: string,
+  suggestedTopics: string
+) => `
+CONTEXTO DE CONVERSACIÓN:
+${contextInfo}
+
+CONVERSACIÓN RECIENTE:
+${recentMessages}
+
+MENSAJE ACTUAL DEL USUARIO: ${userMessage}
+
+INSTRUCCIONES:
+- Considera el contexto completo de la conversación
+- Evita repetir temas ya cubiertos: ${coveredTopics}
+- El tono de conversación debe ser: ${conversationTone}
+- Sugiere temas no explorados: ${suggestedTopics}
+- Basa tu respuesta en los insights contextuales disponibles
+
+RESPONDE DE MANERA NATURAL Y CONTEXTUALIZADA:
+`;

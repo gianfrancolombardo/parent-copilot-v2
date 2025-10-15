@@ -7,6 +7,7 @@ import InsightsGrid from './components/InsightsGrid';
 import ChatWindow from './components/ChatWindow';
 import aiProvider from './services/aiService';
 import { onChildrenUpdate, addChild, onInsightsUpdate, addInsight, onMessagesUpdate, addMessage } from './services/firestoreService';
+import { useConversationContext } from './hooks/useConversationContext';
 import { UI_TEXT } from './constants';
 import Icon from './components/Icon';
 
@@ -19,6 +20,11 @@ const App: React.FC = () => {
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Conversation context management
+  const {
+    updateContext
+  } = useConversationContext();
 
   const activeChild = useMemo(() => children.find(c => c.id === activeChildId), [children, activeChildId]);
 
@@ -40,6 +46,7 @@ const App: React.FC = () => {
     if (!activeChildId) {
       setInsights([]);
       setMessages([]);
+      updateContext([]);
       return;
     }
 
@@ -50,7 +57,14 @@ const App: React.FC = () => {
       unsubscribeInsights();
       unsubscribeMessages();
     };
-  }, [activeChildId]);
+  }, [activeChildId, updateContext]);
+
+  // Effect to update conversation context when messages change
+  useEffect(() => {
+    if (messages.length > 0 && activeChildId) {
+      updateContext(messages);
+    }
+  }, [messages, activeChildId, updateContext]);
 
 
   const handleAddChild = useCallback(async (childData: Omit<Child, 'id'>) => {
@@ -166,13 +180,13 @@ const App: React.FC = () => {
   }
   
   return (
-    <div className="flex flex-col h-screen text-brand-text-primary dark:text-gray-200 font-sans">
-      <header className="w-full max-w-screen-2xl mx-auto px-4 lg:px-8 py-4 flex flex-row justify-between items-center gap-4 flex-shrink-0 z-10 bg-gradient-to-br from-brand-background/80 to-blue-50/80 dark:from-gray-900/80 dark:to-slate-800/80 backdrop-blur-sm sticky top-0 border-b border-black/5 dark:border-white/5">
+    <div className="flex flex-col h-screen text-brand-text-primary dark:text-gray-200 font-sans overflow-x-hidden">
+      <header className="w-full max-w-screen-2xl mx-auto px-4 lg:px-8 py-4 flex flex-row justify-between items-center gap-4 flex-shrink-0 bg-gradient-to-br from-brand-background/80 to-blue-50/80 dark:from-gray-900/80 dark:to-slate-800/80 backdrop-blur-sm border-b border-black/5 dark:border-white/5 relative z-40">
         <div className="flex items-center gap-3">
             <div className="p-2 bg-brand-primary-light dark:bg-brand-primary/20 rounded-full">
                 <Icon name="Baby" className="w-8 h-8 text-brand-primary dark:text-blue-300"/>
             </div>
-            <h1 className="text-2xl font-bold">{UI_TEXT.appName}</h1>
+            <h1 className="text-lg font-bold">{UI_TEXT.appName}</h1>
         </div>
         <ChildSelector
           children={children}
@@ -182,48 +196,54 @@ const App: React.FC = () => {
         />
       </header>
 
-      <main className="flex-1 w-full max-w-screen-2xl mx-auto px-4 lg:px-8 pb-8 grid grid-cols-1 lg:grid-cols-5 gap-8 overflow-hidden">
-        <section className="lg:col-span-2 flex flex-col h-full overflow-hidden mt-6">
-            <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                <h2 className="text-xl font-bold">{UI_TEXT.insights}</h2>
-                <button 
-                  onClick={handleGenerateStimulation} 
-                  disabled={isGeneratingSuggestion}
-                  className="flex items-center gap-2 text-sm font-semibold text-brand-primary hover:text-opacity-80 dark:text-blue-300 dark:hover:text-opacity-80 transition disabled:opacity-50 disabled:cursor-wait"
-                  title="Generar una nueva sugerencia de estímulo"
-                >
-                  {isGeneratingSuggestion ? (
-                    <Icon name="Loader2" className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Icon name="Sparkles" className="w-5 h-5" />
-                  )}
-                  <span className="hidden sm:inline">Sugerencia de Estímulo</span>
-                </button>
-            </div>
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-                 <InsightsGrid insights={insights} child={activeChild} />
-            </div>
-        </section>
-        <section className="hidden lg:block lg:col-span-3 h-full py-4 lg:mt-6">
-            <ChatWindow 
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-            />
-        </section>
+      <main className="flex-1 w-full max-w-screen-2xl mx-auto px-4 lg:px-8 pb-20 lg:pb-8 overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 pt-6">
+          <section className="lg:col-span-2 flex flex-col">
+              <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                  <h2 className="text-xl font-bold">{UI_TEXT.insights}</h2>
+                  <button 
+                    onClick={handleGenerateStimulation} 
+                    disabled={isGeneratingSuggestion}
+                    className="flex items-center gap-2 text-sm font-semibold text-brand-primary hover:text-opacity-80 dark:text-blue-300 dark:hover:text-opacity-80 transition disabled:opacity-50 disabled:cursor-wait"
+                    title="Generar una nueva sugerencia de estímulo"
+                  >
+                    {isGeneratingSuggestion ? (
+                      <Icon name="Loader2" className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Icon name="Sparkles" className="w-5 h-5" />
+                    )}
+                    <span className="hidden sm:inline">Sugerencia de Estímulo</span>
+                  </button>
+              </div>
+              
+              
+              <div className="space-y-4">
+                   <InsightsGrid insights={insights} child={activeChild} />
+              </div>
+          </section>
+          <section className="hidden lg:block lg:col-span-3 h-full py-4 lg:mt-6">
+              <ChatWindow 
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+              />
+          </section>
+        </div>
       </main>
 
-      <div className="lg:hidden fixed bottom-6 right-6 z-30">
+      {/* Mobile Chat Button - Fixed in bottom right corner */}
+      <div className="lg:hidden fixed bottom-4 right-4 z-40">
         <button
           onClick={() => setIsChatOpen(true)}
-          className="bg-brand-primary text-white p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary"
+          className="bg-brand-primary text-white p-4 rounded-full shadow-2xl hover:bg-opacity-90 transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-brand-primary/30 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
           aria-label="Abrir chat"
         >
-          <Icon name="MessageSquare" className="w-8 h-8" />
+          <Icon name="MessageSquare" className="w-6 h-6" />
         </button>
       </div>
 
-      <div className={`lg:hidden fixed inset-0 z-40 transition-opacity duration-300 ease-in-out ${isChatOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
+      {/* Mobile Chat Overlay */}
+      <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out ${isChatOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsChatOpen(false)} aria-hidden="true"></div>
         <div className={`absolute inset-y-0 right-0 w-full max-w-md bg-brand-background dark:bg-gray-900 flex flex-col transform transition-transform duration-300 ease-in-out ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}`}>
            <ChatWindow 
