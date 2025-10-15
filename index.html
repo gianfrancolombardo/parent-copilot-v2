@@ -51,18 +51,42 @@
   body {
     font-family: 'Inter', sans-serif;
   }
+  
+  /* --- Custom Scrollbar Styles --- */
+
+  /* For Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #ccc transparent; /* thumb color, track color */
+  }
+  html.dark {
+    scrollbar-color: #4a5568 transparent;
+  }
+
+  /* For WebKit browsers (Chrome, Safari, Edge) */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 3px;
+    background-color: #ccc;
+    border-radius: 4px;
+    /* Create padding around thumb */
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease-in-out;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #b3b3b3;
   }
   html.dark ::-webkit-scrollbar-thumb {
-    background: #4a5568;
+    background-color: #4a5568;
+  }
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: #5a6472;
   }
 </style>
 </head>

@@ -20,12 +20,12 @@ This document explains how to set up Firebase for the Parent Copilot application
 
 ## 2. Environment Variables
 
-The application is configured to use environment variables for Firebase configuration and the AI provider API key. The code expects these to be available on `process.env`.
+The application is configured to use environment variables for Firebase configuration and the AI provider API key. The code expects these to be available on `process.env`. To be exposed to the client-side application, all variables **must** be prefixed with `REACT_APP_`.
 
 The application supports both Google Gemini and OpenAI as AI providers.
 
--   **To use OpenAI (Recommended):** Set the `OPENAI_API_KEY`. The app will use `gpt-5-mini`. This provider is prioritized if both keys are present.
--   **To use Gemini:** Set the `API_KEY`. This will be used as a fallback if `OPENAI_API_KEY` is not set.
+-   **To use OpenAI (Recommended):** Set the `REACT_APP_OPENAI_API_KEY`. The app will use `gpt-5-mini`. This provider is prioritized if both keys are present.
+-   **To use Gemini:** Set the `REACT_APP_API_KEY`. This will be used as a fallback if `REACT_APP_OPENAI_API_KEY` is not set.
 -   If neither key is provided, the AI features will be disabled and will show an error message in the chat.
 
 **Required Variables:**
@@ -39,8 +39,8 @@ REACT_APP_FIREBASE_MESSAGING_SENDER_ID="86922263005"
 REACT_APP_FIREBASE_APP_ID="1:86922263005:web:a76064cb815e9993435e34"
 
 # Choose your AI provider(s)
-API_KEY="YOUR_GEMINI_API_KEY"
-OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+REACT_APP_API_KEY="YOUR_GEMINI_API_KEY"
+REACT_APP_OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
 ```
 
 ## 3. Firestore Data Structure

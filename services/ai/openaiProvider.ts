@@ -4,7 +4,7 @@ import { SYSTEM_PROMPT, GET_INITIAL_QUESTION_PROMPT, GET_STIMULATION_SUGGESTION_
 import { InsightCategory as IC } from '../../types';
 import type { AIProvider } from './baseProvider';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 const MODEL = 'gpt-5-mini';
 
@@ -12,7 +12,7 @@ export class OpenAIProvider implements AIProvider {
 
     constructor() {
         if (!OPENAI_API_KEY) {
-            throw new Error("OpenAI API key (OPENAI_API_KEY) is not set in environment variables.");
+            throw new Error("OpenAI API key (REACT_APP_OPENAI_API_KEY) is not set in environment variables.");
         }
     }
 

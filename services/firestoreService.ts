@@ -23,11 +23,13 @@ export function onChildrenUpdate(callback: (children: Child[]) => void) {
   const q = query(collection(db, "children"), orderBy("createdAt", "asc"));
   return onSnapshot(q, (querySnapshot) => {
     const children: Child[] = querySnapshot.docs.map(doc => {
-      const { name, birthDate } = doc.data();
+      const data = doc.data();
+      // Explicitly create a new plain object to prevent any circular references
+      // from leaking from the Firebase SDK's internal objects.
       return {
         id: doc.id,
-        name,
-        birthDate,
+        name: data.name,
+        birthDate: data.birthDate,
       };
     });
     callback(children);
@@ -47,23 +49,27 @@ export function onInsightsUpdate(childId: string, callback: (insights: Insight[]
   const q = query(collection(db, "insights"), where("childId", "==", childId));
   return onSnapshot(q, (querySnapshot) => {
     const insights = querySnapshot.docs.map(doc => {
-        const { childId, category, title, observation, recommendation, status, iconName, type, createdAt } = doc.data() as InsightDoc;
-        // When a document is created locally, `createdAt` can be null until the server
-        // assigns the timestamp. This check prevents a crash.
-        if (!createdAt) return null;
+        const data = doc.data();
+        // A server timestamp can be pending, so we must check for its existence.
+        if (!data || !data.createdAt) {
+          return null;
+        }
         
-        return {
+        // Explicitly create a new plain object to prevent any circular references
+        // from leaking from the Firebase SDK's internal objects.
+        const plainInsight: Insight = {
           id: doc.id, 
-          childId,
-          category,
-          title,
-          observation,
-          recommendation,
-          status,
-          iconName,
-          type,
-          createdAt: createdAt.toDate().toISOString(),
+          childId: data.childId,
+          category: data.category,
+          title: data.title,
+          observation: data.observation,
+          recommendation: data.recommendation,
+          status: data.status,
+          iconName: data.iconName,
+          type: data.type,
+          createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
         };
+        return plainInsight;
       })
       .filter((insight): insight is Insight => insight !== null);
 
@@ -86,20 +92,25 @@ export function onMessagesUpdate(childId: string, callback: (messages: ChatMessa
   const messagesCollectionRef = collection(db, `messages/${childId}/history`);
   const q = query(messagesCollectionRef, orderBy("createdAt", "asc"));
   return onSnapshot(q, (querySnapshot) => {
-    const messages = querySnapshot.docs.map(doc => {
-        const { role, content, questionCategory, createdAt } = doc.data() as MessageDoc;
-        // When a document is created locally, `createdAt` can be null until the server
-        // assigns the timestamp. This check prevents a crash.
-        if (!createdAt) return null;
+    const messages = querySnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        // A server timestamp can be pending, so we must check for its existence.
+        if (!data || !data.createdAt) {
+          return null;
+        }
         
-        return {
+        // Explicitly create a new plain object to prevent any circular references
+        // from leaking from the Firebase SDK's internal objects.
+        const plainMessage: ChatMessage = {
           id: doc.id,
           childId: childId,
-          role,
-          content,
-          questionCategory,
-          createdAt: createdAt.toDate().toISOString(),
+          role: data.role,
+          content: data.content,
+          createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+          questionCategory: data.questionCategory,
         };
+        return plainMessage;
       })
       .filter((message): message is ChatMessage => message !== null);
 

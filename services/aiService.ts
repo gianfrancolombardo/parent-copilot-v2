@@ -6,14 +6,14 @@ import { InsightCategory as IC } from '../types';
 let aiProvider: AIProvider;
 
 // Prioritize OpenAI if the key is available
-if (process.env.OPENAI_API_KEY) {
+if (process.env.REACT_APP_OPENAI_API_KEY) {
   try {
     aiProvider = new OpenAIProvider();
     console.log("Using OpenAI provider.");
   } catch (error) {
     console.error("Failed to initialize OpenAI provider:", error);
   }
-} else if (process.env.API_KEY) {
+} else if (process.env.REACT_APP_API_KEY) {
   try {
     aiProvider = new GeminiProvider();
     console.log("Using Gemini provider.");
@@ -23,7 +23,7 @@ if (process.env.OPENAI_API_KEY) {
 }
 
 if (!aiProvider) {
-    console.warn("No AI provider API key found. AI features will be disabled. Please set API_KEY (for Gemini) or OPENAI_API_KEY.");
+    console.warn("No AI provider API key found. AI features will be disabled. Please set REACT_APP_API_KEY (for Gemini) or REACT_APP_OPENAI_API_KEY.");
     // Fallback to a dummy provider to avoid crashing the app, but log errors.
     aiProvider = {
         getInitialQuestion: async () => {
@@ -50,14 +50,4 @@ if (!aiProvider) {
     };
 }
 
-const { 
-  getInitialQuestion, 
-  getChatbotResponse, 
-  getStimulationSuggestion 
-} = aiProvider;
-
-export { 
-  getInitialQuestion, 
-  getChatbotResponse, 
-  getStimulationSuggestion 
-};
+export default aiProvider;

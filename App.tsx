@@ -5,7 +5,7 @@ import AddChildForm from './components/AddChildForm';
 import ChildSelector from './components/ChildSelector';
 import InsightsGrid from './components/InsightsGrid';
 import ChatWindow from './components/ChatWindow';
-import { getChatbotResponse, getInitialQuestion, getStimulationSuggestion } from './services/aiService';
+import aiProvider from './services/aiService';
 import { onChildrenUpdate, addChild, onInsightsUpdate, addInsight, onMessagesUpdate, addMessage } from './services/firestoreService';
 import { UI_TEXT } from './constants';
 import Icon from './components/Icon';
@@ -64,7 +64,7 @@ const App: React.FC = () => {
       // as we don't know the ID yet. A better approach might be a cloud function
       // to generate this on child creation.
       const tempChild: Child = { ...childData, id: 'temp' };
-      const initialQuestion = await getInitialQuestion(tempChild);
+      const initialQuestion = await aiProvider.getInitialQuestion(tempChild);
       
       // We need to wait for the child to be added and become active to get its ID
       // This is a bit tricky. A simple solution is to assume the last added child is the new one.
@@ -110,7 +110,7 @@ const App: React.FC = () => {
     const activeChildHistory = messages.filter(m => m.childId === activeChildId);
 
     try {
-        const { reply, newInsight } = await getChatbotResponse(activeChild, activeChildHistory, content);
+        const { reply, newInsight } = await aiProvider.getChatbotResponse(activeChild, activeChildHistory, content);
 
         if (newInsight) {
           const insightToAdd: Omit<Insight, 'id'> = {
@@ -139,7 +139,7 @@ const App: React.FC = () => {
     if (!activeChild) return;
     setIsGeneratingSuggestion(true);
     try {
-      const suggestionData = await getStimulationSuggestion(activeChild);
+      const suggestionData = await aiProvider.getStimulationSuggestion(activeChild);
       const newStimulationInsight: Omit<Insight, 'id'> = {
         childId: activeChild.id,
         ...suggestionData,

@@ -5,14 +5,14 @@ import { SYSTEM_PROMPT, GET_INITIAL_QUESTION_PROMPT, GET_STIMULATION_SUGGESTION_
 import { InsightCategory as IC } from '../../types';
 import type { AIProvider } from './baseProvider';
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.REACT_APP_API_KEY;
 
 export class GeminiProvider implements AIProvider {
     private ai: GoogleGenAI;
 
     constructor() {
         if (!API_KEY) {
-            throw new Error("Gemini API key (API_KEY) is not set in environment variables.");
+            throw new Error("Gemini API key (REACT_APP_API_KEY) is not set in environment variables.");
         }
         this.ai = new GoogleGenAI({ apiKey: API_KEY });
     }
