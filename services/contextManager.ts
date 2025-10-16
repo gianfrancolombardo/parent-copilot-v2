@@ -77,7 +77,7 @@ export class ContextManager {
     analysis: ContextAnalysis,
     userMessage: string
   ): string {
-    const contextInfo = this.buildContextInfo(context, analysis);
+    const contextInfo = this.buildContextInfoWithAge(context, analysis, childAge);
     
     return CONTEXTUAL_CONVERSATION_PROMPT(
       contextInfo,
@@ -160,7 +160,9 @@ export class ContextManager {
 
   private static suggestNextTopics(context: ConversationContext): InsightCategory[] {
     const allCategories: InsightCategory[] = [
-      'Language', 'Motor', 'Social', 'Sleep', 'Feeding', 'Cognitive', 'Play', 'Autonomy'
+      'Language' as InsightCategory, 'Motor' as InsightCategory, 'Social' as InsightCategory, 
+      'Sleep' as InsightCategory, 'Feeding' as InsightCategory, 'Cognitive' as InsightCategory, 
+      'Play' as InsightCategory, 'Autonomy' as InsightCategory
     ];
     
     return allCategories.filter(category => 
@@ -217,6 +219,36 @@ export class ContextManager {
 - Insights contextuales: ${analysis.contextualInsights.join('; ')}
 - **RECORDATORIO**: Siempre crea insights cuando el usuario proporcione información nueva sobre desarrollo, incluso si el tema ya fue cubierto
 `;
+  }
+
+  private static buildContextInfoWithAge(context: ConversationContext, analysis: ContextAnalysis, childAge: number): string {
+    const ageContext = this.formatAgeForAI(childAge);
+    
+    return `
+- Edad del niño: ${ageContext}
+- Resumen: ${context.conversationSummary}
+- Temas cubiertos: ${context.coveredTopics.length > 0 ? context.coveredTopics.join(', ') : 'Ninguno aún'}
+- Evitar repetición: ${analysis.shouldAvoidRepetition ? 'Sí (solo si es muy reciente)' : 'No'}
+- Tono sugerido: ${analysis.conversationTone}
+- Temas sugeridos: ${analysis.suggestedTopics.join(', ')}
+- Insights contextuales: ${analysis.contextualInsights.join('; ')}
+- **RECORDATORIO**: Siempre crea insights cuando el usuario proporcione información nueva sobre desarrollo, incluso si el tema ya fue cubierto
+- **IMPORTANTE**: Usa la edad (${ageContext}) para hacer preguntas apropiadas y crear insights relevantes para el desarrollo típico de esta edad
+`;
+  }
+
+  private static formatAgeForAI(ageInMonths: number): string {
+    const years = Math.floor(ageInMonths / 12);
+    const months = ageInMonths % 12;
+    
+    if (years > 0) {
+      if (months > 0) {
+        return `${ageInMonths} meses (${years} años y ${months} meses)`;
+      } else {
+        return `${ageInMonths} meses (${years} ${years > 1 ? 'años' : 'año'})`;
+      }
+    }
+    return `${ageInMonths} meses`;
   }
 
   private static formatRecentMessages(messages: ChatMessage[]): string {

@@ -26,7 +26,8 @@ export type IconName =
   | 'MessageSquare' | 'Footprints' | 'Heart' | 'Moon' | 'UtensilsCrossed' 
   | 'BrainCircuit' | 'Palette' | 'User' | 'Plus' | 'ChevronDown' | 'Send' 
   | 'Baby' | 'Sparkles' | 'Loader2' | 'X' | 'TrendingUp' | 'CheckCircle2'
-  | 'Hourglass' | 'AlertTriangle' | 'BookOpen';
+  | 'Hourglass' | 'AlertTriangle' | 'BookOpen' | 'Lightbulb' | 'Tag'
+  | 'Brain' | 'Box' | 'Puzzle';
 
 export type Insight = {
   id: string;

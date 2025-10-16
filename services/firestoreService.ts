@@ -79,11 +79,18 @@ export function onInsightsUpdate(childId: string, callback: (insights: Insight[]
   });
 }
 
-export async function addInsight(insightData: Omit<Insight, 'id'>) {
-    await addDoc(collection(db, "insights"), {
+export async function addInsight(insightData: Omit<Insight, 'id'>): Promise<Insight> {
+    const docRef = await addDoc(collection(db, "insights"), {
         ...insightData,
         createdAt: serverTimestamp()
     });
+    
+    // Return the created insight with the generated ID
+    return {
+        id: docRef.id,
+        ...insightData,
+        createdAt: new Date().toISOString() // Use current time as fallback
+    };
 }
 
 // --- Messages ---

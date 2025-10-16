@@ -5,9 +5,11 @@ import AddChildForm from './components/AddChildForm';
 import ChildSelector from './components/ChildSelector';
 import InsightsGrid from './components/InsightsGrid';
 import ChatWindow from './components/ChatWindow';
+import Toast from './components/Toast';
 import aiProvider from './services/aiService';
 import { onChildrenUpdate, addChild, onInsightsUpdate, addInsight, onMessagesUpdate, addMessage } from './services/firestoreService';
 import { useConversationContext } from './hooks/useConversationContext';
+import { useToast } from './hooks/useToast';
 import { UI_TEXT } from './constants';
 import Icon from './components/Icon';
 
@@ -25,6 +27,9 @@ const App: React.FC = () => {
   const {
     updateContext
   } = useConversationContext();
+
+  // Toast management
+  const { toast, showToast, clearToast } = useToast();
 
   const activeChild = useMemo(() => children.find(c => c.id === activeChildId), [children, activeChildId]);
 
@@ -131,7 +136,10 @@ const App: React.FC = () => {
             ...newInsight,
             childId: activeChild.id,
           } as Omit<Insight, 'id'>;
-          await addInsight(insightToAdd);
+          
+          // Add insight to database and show toast notification
+          const addedInsight = await addInsight(insightToAdd);
+          showToast(addedInsight);
         }
 
         const assistantMessage = { role: 'assistant' as const, content: reply };
@@ -161,7 +169,10 @@ const App: React.FC = () => {
         status: InsightStatus.OnTrack, // Default status for suggestions
         iconName: 'Sparkles',
       };
-      await addInsight(newStimulationInsight);
+      const addedInsight = await addInsight(newStimulationInsight);
+      
+      // Show toast notification for stimulation suggestion
+      showToast(addedInsight);
     } catch (error) {
       console.error("Error generating stimulation suggestion:", error);
     } finally {
@@ -255,6 +266,12 @@ const App: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <Toast 
+        insight={toast.insight} 
+        onClose={clearToast} 
+      />
     </div>
   );
 };

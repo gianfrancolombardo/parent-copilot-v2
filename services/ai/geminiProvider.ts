@@ -80,7 +80,7 @@ export class GeminiProvider implements AIProvider {
             const response = await this.ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: contextualPrompt,
-                config: { systemInstruction: SYSTEM_PROMPT },
+                config: { systemInstruction: SYSTEM_PROMPT(ageInMonths) },
             });
             let rawText = response.text;
             let newInsight: Omit<Insight, 'id' | 'childId'> | null = null;
@@ -92,24 +92,68 @@ export class GeminiProvider implements AIProvider {
             
             if (rawText.includes(insightMarker)) {
                 const parts = rawText.split(insightMarker);
-                const insightJsonString = parts[1].trim().split('\n')[0];
-                reply = rawText.substring(rawText.indexOf(insightJsonString) + insightJsonString.length).trim();
-                try {
-                    const parsedInsight = JSON.parse(insightJsonString);
-                    if (parsedInsight.observation && parsedInsight.recommendation) {
-                        newInsight = { ...parsedInsight, createdAt: new Date().toISOString(), type: 'observation' };
-                        console.log('✅ INSIGHT DEBUG (Gemini) - Insight created successfully:', {
-                          category: parsedInsight.category,
-                          title: parsedInsight.title,
-                          status: parsedInsight.status
-                        });
+                if (parts.length >= 2) {
+                    // Get the text after the marker and find the JSON object
+                    const afterMarker = parts[1].trim();
+                    const jsonStart = afterMarker.indexOf('{');
+                    
+                    if (jsonStart !== -1) {
+                        // Find the matching closing brace for the JSON object
+                        let braceCount = 0;
+                        let jsonEnd = jsonStart;
+                        
+                        for (let i = jsonStart; i < afterMarker.length; i++) {
+                            if (afterMarker[i] === '{') {
+                                braceCount++;
+                            } else if (afterMarker[i] === '}') {
+                                braceCount--;
+                                if (braceCount === 0) {
+                                    jsonEnd = i;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (braceCount === 0) {
+                            // Extract the clean JSON string
+                            const insightJsonString = afterMarker.substring(jsonStart, jsonEnd + 1);
+                            
+                            // Get the reply part (everything after the JSON object)
+                            const fullInsightText = afterMarker.substring(0, jsonEnd + 1);
+                            const insightEndIndex = rawText.indexOf(insightMarker) + insightMarker.length + afterMarker.substring(0, jsonEnd + 1).length;
+                            reply = rawText.substring(insightEndIndex).trim();
+                            
+                            // Clean up any remaining markers or extra text from reply
+                            reply = reply.replace(/^[^\w\s]*/, '').trim(); // Remove leading non-word characters
+                            
+                            try {
+                                const parsedInsight = JSON.parse(insightJsonString);
+                                if (parsedInsight.observation && parsedInsight.recommendation) {
+                                    newInsight = { ...parsedInsight, createdAt: new Date().toISOString(), type: 'observation' };
+                                    console.log('✅ INSIGHT DEBUG (Gemini) - Insight created successfully:', {
+                                      category: parsedInsight.category,
+                                      title: parsedInsight.title,
+                                      status: parsedInsight.status
+                                    });
+                                } else {
+                                    console.error("❌ INSIGHT DEBUG (Gemini) - Parsed insight is missing 'observation' or 'recommendation' field:", parsedInsight);
+                                    reply = rawText;
+                                }
+                            } catch (e) {
+                                console.error("❌ INSIGHT DEBUG (Gemini) - Failed to parse insight JSON:", e, "JSON String:", insightJsonString);
+                                reply = rawText;
+                            }
+                        } else {
+                            console.error("❌ INSIGHT DEBUG (Gemini) - Unmatched braces in JSON object");
+                            reply = rawText;
+                        }
                     } else {
-                        console.error("❌ INSIGHT DEBUG (Gemini) - Parsed insight is missing 'observation' or 'recommendation' field:", parsedInsight);
+                        console.error("❌ INSIGHT DEBUG (Gemini) - No JSON object found after marker");
                         reply = rawText;
                     }
-                } catch (e) {
-                    console.error("❌ INSIGHT DEBUG (Gemini) - Failed to parse insight JSON:", e, "JSON String:", insightJsonString);
+                } else {
                     reply = rawText;
+                    console.error("❌ INSIGHT DEBUG (Gemini) - Invalid insight marker format");
                 }
             } else {
                 reply = rawText;
